@@ -3,22 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧧 2026 馬到成功紅包 🧧</title>
+    <title>🧧 2026 馬到成功：家族專屬紅包 🧧</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: #b31217; color: #fff; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        :root { 
+            --gold: #CDB38B; /* 精緻香檳金 */
+            --red: #9B1B30;  /* 典雅酒紅 */
+            --bright-red: #e62117;
+        }
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--red); color: #fff; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
         .card { width: 90%; max-width: 350px; text-align: center; }
-        h1 { font-size: 28px; color: #f9d423; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); margin-bottom: 10px; }
-        .user-name { font-size: 18px; color: #f9d423; margin-bottom: 30px; }
         
-        /* 紅包袋外型 */
-        .envelope { width: 180px; height: 260px; background: #e62117; border-radius: 15px; margin: 0 auto; position: relative; cursor: pointer; border: 4px solid #f9d423; box-shadow: 0 15px 35px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
-        .envelope:hover { transform: translateY(-5px); }
-        .envelope:active { transform: scale(0.9); }
+        .user-name { font-size: 20px; color: var(--gold); margin-bottom: 10px; font-weight: bold; }
+        
+        /* 獎項預覽區 */
+        .prize-preview { background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 15px; margin-bottom: 30px; border: 1px solid rgba(205, 179, 139, 0.3); }
+        .prize-preview div { font-size: 14px; margin-bottom: 8px; color: var(--gold); }
+        .prize-preview span { display: inline-block; margin: 2px 8px; font-size: 13px; opacity: 0.9; }
 
+        /* 紅包袋 */
+        .envelope { width: 160px; height: 240px; background: var(--bright-red); border-radius: 15px; margin: 0 auto; position: relative; cursor: pointer; border: 4px solid var(--gold); box-shadow: 0 15px 35px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+        .envelope::before { content: '福'; font-size: 60px; color: var(--gold); font-weight: bold; }
+        
         /* 搖晃動畫 */
-        .shake { animation: shake 0.5s infinite; }
+        .shake-slow { animation: shake 0.6s infinite; }
         @keyframes shake {
             0% { transform: rotate(0deg); }
             25% { transform: rotate(5deg); }
@@ -27,80 +36,165 @@
             100% { transform: rotate(0deg); }
         }
 
-        /* 紅包蓋與裝飾 */
-        .envelope::before { content: '福'; position: absolute; font-size: 60px; color: #f9d423; font-weight: bold; top: 30%; }
-        .envelope::after { content: '2026'; position: absolute; font-size: 14px; bottom: 15px; color: rgba(249, 212, 35, 0.6); }
-
+        /* 遮罩與倒數 */
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        #status-text { font-size: 24px; color: #fff; margin-bottom: 30px; letter-spacing: 2px; }
+        #countdown { font-size: 100px; color: var(--gold); font-weight: bold; }
+        
         /* 開獎結果 */
-        #result-box { display: none; background: #fff; color: #333; padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .prize-title { font-size: 20px; color: #666; margin-bottom: 10px; }
-        .prize-name { font-size: 32px; color: #b31217; font-weight: bold; }
-        .btn-reset { margin-top: 20px; background: #b31217; color: #fff; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
+        #result-box { display: none; background: #fff; color: #333; padding: 40px 20px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+        .prize-name { font-size: 32px; color: var(--red); font-weight: bold; margin: 25px 0; }
+        .btn-reset { background: var(--red); color: #fff; border: none; padding: 12px 40px; border-radius: 30px; cursor: pointer; font-size: 16px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <div id="setup-view">
-        <h1 id="greeting">新春快樂！</h1>
-        <div id="user-display" class="user-name">正在準備紅包...</div>
-        
-        <div id="envelope-el" class="envelope shake"></div>
-        <p style="margin-top: 30px; opacity: 0.8;">點擊紅包開獎</p>
+        <div id="user-display" class="user-name">正在準備專屬紅包...</div>
+        <div class="prize-preview" id="prize-list-ui">
+            </div>
+        <div id="envelope-el" class="envelope shake-slow"></div>
+        <p style="margin-top: 30px; font-weight: bold; color: var(--gold);">點擊紅包開始挑戰</p>
     </div>
 
     <div id="result-box">
-        <div class="prize-title">恭喜你抽中</div>
+        <div style="font-size: 18px; color: #666;">🧧 恭喜抽中 🧧</div>
         <div id="prize-text" class="prize-name">---</div>
         <button class="btn-reset" onclick="location.reload()">再玩一次</button>
     </div>
 </div>
 
-<script>
-    const LIFF_ID = '2009139904-bUTEHF63';
-    const PRIZES = [
-        '現金 2000 元 🧧',
-        '現金 5000 元 💰',
-        '日本來回機票一張 ✈️',
-        '再來一次 🏮'
-    ];
+<div id="overlay">
+    <div id="status-text">使勁搖晃手機開獎！</div>
+    <div id="countdown"></div>
+</div>
 
+<script>
+    // --- 基礎設定 ---
+    const LIFF_ID = '2009139904-bUTEHF63';
+    
+    // 專屬獎項關鍵字 (模糊比對：只要名稱包含關鍵字即中獎)
+    const FAMILY_CONFIG = {
+        '許文仁': ['日本東京來回機票一張 ✈️', '現金 8800 元 🧧', '現金 2000 元 🧧', '文史地理諮詢券 🗺️'],
+        'Grace': ['日本秋田來回機票一張 ✈️', '現金 8800 元 🧧', '現金 2000 元 🧧', '頂級下午茶餐券 🍰'],
+        'HSQ': ['現金 2000 元 🧧'],
+        '碧娥': ['日本東京來回機票一張 ✈️', '現金 8800 元 🧧', '現金 2000 元 🧧', '皇家火鍋吃到飽 🍲'],
+        'default': ['現金 200 元 🧧', '200元 刮刮樂 1張 ', '100元 刮刮樂 1張', '2026 好運旺旺來 🏮']
+    };
+
+    let currentPrizes = [];
+    let isGameStarted = false;
+
+    // --- 初始化 ---
     async function init() {
         try {
             await liff.init({ liffId: LIFF_ID });
             if (!liff.isLoggedIn()) {
                 liff.login();
-            } else {
-                const profile = await liff.getProfile();
-                document.getElementById('user-display').innerText = `給 ${profile.displayName} 的專屬紅包`;
+                return;
             }
+            
+            const profile = await liff.getProfile();
+            const name = profile.displayName;
+            document.getElementById('user-display').innerText = `給 ${name} 的專屬紅包`;
+
+            // 模糊比對邏輯
+            let matchedKey = 'default';
+            for (let key in FAMILY_CONFIG) {
+                if (key !== 'default' && name.includes(key)) {
+                    matchedKey = key;
+                    break;
+                }
+            }
+            currentPrizes = FAMILY_CONFIG[matchedKey];
+            
+            // 更新 UI 預覽
+            const listUI = document.getElementById('prize-list-ui');
+            listUI.innerHTML = '<div>今日好運獎池：</div>' + 
+                currentPrizes.map(p => `<span>• ${p}</span>`).join('');
+
         } catch (err) {
-            document.getElementById('user-display').innerText = "請用 LINE 開啟以獲得最佳體驗";
+            document.getElementById('user-display').innerText = "請用 LINE 開啟紅包";
         }
     }
 
-    document.getElementById('envelope-el').addEventListener('click', function() {
-        // 停止搖晃並隱藏紅包
-        this.classList.remove('shake');
+    // --- 互動邏輯 ---
+    document.getElementById('envelope-el').addEventListener('click', async function() {
+        if (isGameStarted) return;
+        isGameStarted = true;
+
+        // 處理 iOS 動作感測權限
+        if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            try {
+                const permission = await DeviceMotionEvent.requestPermission();
+                if (permission !== 'granted') {
+                    startCountdown(); // 拒絕權限則直接進入倒數
+                    return;
+                }
+            } catch (e) {
+                startCountdown();
+                return;
+            }
+        }
+
+        document.getElementById('overlay').style.display = 'flex';
+        startShakeDetection();
+    });
+
+    function startShakeDetection() {
+        let shakeCount = 0;
+        const threshold = 15; // 搖晃強度門檻
+
+        function onMotion(e) {
+            const acc = e.accelerationIncludingGravity;
+            if (!acc) return;
+            
+            let movement = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+            if (movement > threshold) {
+                shakeCount++;
+                if (shakeCount > 12) { // 成功搖晃次數
+                    window.removeEventListener('devicemotion', onMotion);
+                    startCountdown();
+                }
+            }
+        }
+        window.addEventListener('devicemotion', onMotion);
+    }
+
+    function startCountdown() {
+        document.getElementById('status-text').innerText = "氣運凝聚中...";
+        let count = 3;
+        const countEl = document.getElementById('countdown');
+        countEl.innerText = count;
+
+        const timer = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countEl.innerText = count;
+            } else {
+                clearInterval(timer);
+                renderResult();
+            }
+        }, 1000);
+    }
+
+    function renderResult() {
+        const luckyPrize = currentPrizes[Math.floor(Math.random() * currentPrizes.length)];
         
-        // 隨機選獎項
-        const luckyPrize = PRIZES[Math.floor(Math.random() * PRIZES.length)];
-        
-        // 噴發彩帶效果
+        // 金色與紅色的彩帶特效
         confetti({
-            particleCount: 150,
-            spread: 70,
+            particleCount: 200,
+            spread: 80,
             origin: { y: 0.6 },
-            colors: ['#f9d423', '#fff', '#ff0000']
+            colors: ['#CDB38B', '#FFD700', '#9B1B30']
         });
 
-        // 顯示結果
-        setTimeout(() => {
-            document.getElementById('setup-view').style.display = 'none';
-            document.getElementById('result-box').style.display = 'block';
-            document.getElementById('prize-text').innerText = luckyPrize;
-        }, 300);
-    });
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('setup-view').style.display = 'none';
+        document.getElementById('result-box').style.display = 'block';
+        document.getElementById('prize-text').innerText = luckyPrize;
+    }
 
     init();
 </script>
