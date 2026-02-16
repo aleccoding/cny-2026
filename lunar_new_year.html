@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧧 2026 馬到成功紅包 🧧</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: #b31217; color: #fff; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .card { width: 90%; max-width: 350px; text-align: center; }
+        h1 { font-size: 28px; color: #f9d423; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); margin-bottom: 10px; }
+        .user-name { font-size: 18px; color: #f9d423; margin-bottom: 30px; }
+        
+        /* 紅包袋外型 */
+        .envelope { width: 180px; height: 260px; background: #e62117; border-radius: 15px; margin: 0 auto; position: relative; cursor: pointer; border: 4px solid #f9d423; box-shadow: 0 15px 35px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+        .envelope:hover { transform: translateY(-5px); }
+        .envelope:active { transform: scale(0.9); }
+
+        /* 搖晃動畫 */
+        .shake { animation: shake 0.5s infinite; }
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(5deg); }
+            50% { transform: rotate(0eg); }
+            75% { transform: rotate(-5deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* 紅包蓋與裝飾 */
+        .envelope::before { content: '福'; position: absolute; font-size: 60px; color: #f9d423; font-weight: bold; top: 30%; }
+        .envelope::after { content: '2026'; position: absolute; font-size: 14px; bottom: 15px; color: rgba(249, 212, 35, 0.6); }
+
+        /* 開獎結果 */
+        #result-box { display: none; background: #fff; color: #333; padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .prize-title { font-size: 20px; color: #666; margin-bottom: 10px; }
+        .prize-name { font-size: 32px; color: #b31217; font-weight: bold; }
+        .btn-reset { margin-top: 20px; background: #b31217; color: #fff; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div id="setup-view">
+        <h1 id="greeting">新春快樂！</h1>
+        <div id="user-display" class="user-name">正在準備紅包...</div>
+        
+        <div id="envelope-el" class="envelope shake"></div>
+        <p style="margin-top: 30px; opacity: 0.8;">點擊紅包開獎</p>
+    </div>
+
+    <div id="result-box">
+        <div class="prize-title">恭喜你抽中</div>
+        <div id="prize-text" class="prize-name">---</div>
+        <button class="btn-reset" onclick="location.reload()">再玩一次</button>
+    </div>
+</div>
+
+<script>
+    const LIFF_ID = '你的_LIFF_ID_貼在這裡'; // 請替換成你的 LIFF ID
+    const PRIZES = [
+        '現金 2000 元 🧧',
+        '現金 5000 元 💰',
+        '日本來回機票 ✈️',
+        '神秘驚喜小禮 🎁',
+        '再來一次 🏮'
+    ];
+
+    async function init() {
+        try {
+            await liff.init({ liffId: LIFF_ID });
+            if (!liff.isLoggedIn()) {
+                liff.login();
+            } else {
+                const profile = await liff.getProfile();
+                document.getElementById('user-display').innerText = `給 ${profile.displayName} 的專屬紅包`;
+            }
+        } catch (err) {
+            document.getElementById('user-display').innerText = "請用 LINE 開啟以獲得最佳體驗";
+        }
+    }
+
+    document.getElementById('envelope-el').addEventListener('click', function() {
+        // 停止搖晃並隱藏紅包
+        this.classList.remove('shake');
+        
+        // 隨機選獎項
+        const luckyPrize = PRIZES[Math.floor(Math.random() * PRIZES.length)];
+        
+        // 噴發彩帶效果
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#f9d423', '#fff', '#ff0000']
+        });
+
+        // 顯示結果
+        setTimeout(() => {
+            document.getElementById('setup-view').style.display = 'none';
+            document.getElementById('result-box').style.display = 'block';
+            document.getElementById('prize-text').innerText = luckyPrize;
+        }, 300);
+    });
+
+    init();
+</script>
+</body>
+</html>
