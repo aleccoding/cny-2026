@@ -43,7 +43,8 @@
         
         /* 開獎結果 */
         #result-box { display: none; background: #fff; color: #333; padding: 40px 20px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
-        .prize-name { font-size: 32px; color: var(--red); font-weight: bold; margin: 25px 0; }
+        .prize-name { font-size: 32px; color: var(--red); font-weight: bold; margin: 20px 0 10px 0; }
+        .greeting-msg { font-size: 16px; color: #888; font-style: italic; margin-bottom: 25px; line-height: 1.5; }
         .btn-reset { background: var(--red); color: #fff; border: none; padding: 12px 40px; border-radius: 30px; cursor: pointer; font-size: 16px; font-weight: bold; }
     </style>
 </head>
@@ -52,8 +53,7 @@
 <div class="card">
     <div id="setup-view">
         <div id="user-display" class="user-name">正在準備專屬紅包...</div>
-        <div class="prize-preview" id="prize-list-ui">
-            </div>
+        <div class="prize-preview" id="prize-list-ui"></div>
         <div id="envelope-el" class="envelope shake-slow"></div>
         <p style="margin-top: 30px; font-weight: bold; color: var(--gold);">點擊紅包開始挑戰</p>
     </div>
@@ -61,6 +61,7 @@
     <div id="result-box">
         <div style="font-size: 18px; color: #666;">🧧 恭喜抽中 🧧</div>
         <div id="prize-text" class="prize-name">---</div>
+        <div id="greeting-text" class="greeting-msg"></div>
         <button class="btn-reset" onclick="location.reload()">再玩一次</button>
     </div>
 </div>
@@ -74,14 +75,26 @@
     // --- 基礎設定 ---
     const LIFF_ID = '2009139904-bUTEHF63';
     
-    // 專屬獎項關鍵字 (模糊比對：只要名稱包含關鍵字即中獎)
+    // 專屬獎項關鍵字 (模糊比對)
     const FAMILY_CONFIG = {
-        '許文仁': ['日本東京來回機票一張 ✈️', '現金 8800 元 🧧', '現金 2000 元 🧧', '文史地理諮詢券 🗺️'],
+        '許文仁': ['日本東京來回機票一張 ✈️', '現金 8800 元 🧧', '現金 2000 元 🧧', '高級餐廳晚餐一客 🥩'],
         'Grace': ['日本秋田來回機票一張 ✈️', '現金 8800 元 🧧', '現金 2000 元 🧧', '頂級下午茶餐券 🍰'],
         'HSQ': ['現金 2000 元 🧧'],
         '碧娥': ['日本東京來回機票一張 ✈️', '現金 8800 元 🧧', '現金 2000 元 🧧', '皇家火鍋吃到飽 🍲'],
+        'Nene': ['釜山柏悅住宿兩晚 🏨', '釜山日本不限航點來回機票一張 ✈️', '現金 2000 元 🧧', '高級餐廳晚餐一客 🥩'],
         'default': ['現金 200 元 🧧', '200元 刮刮樂 1張 ', '100元 刮刮樂 1張', '2026 好運旺旺來 🏮']
     };
+
+    // 馬年專屬吉祥話
+    const HORSE_GREETINGS = [
+        "祝您馬到成功，事事順心！",
+        "龍馬精神，身體健康萬事如意！",
+        "一馬當先，開春大吉發大財！",
+        "馬力十足，2026 財源滾滾來！",
+        "萬馬奔騰，好運擋都擋不住！",
+        "金馬迎春，三月賞櫻笑聲連連！",
+        "天馬行空，創意無限馬年大發！"
+    ];
 
     let currentPrizes = [];
     let isGameStarted = false;
@@ -124,12 +137,11 @@
         if (isGameStarted) return;
         isGameStarted = true;
 
-        // 處理 iOS 動作感測權限
         if (typeof DeviceMotionEvent.requestPermission === 'function') {
             try {
                 const permission = await DeviceMotionEvent.requestPermission();
                 if (permission !== 'granted') {
-                    startCountdown(); // 拒絕權限則直接進入倒數
+                    startCountdown();
                     return;
                 }
             } catch (e) {
@@ -144,7 +156,7 @@
 
     function startShakeDetection() {
         let shakeCount = 0;
-        const threshold = 15; // 搖晃強度門檻
+        const threshold = 15;
 
         function onMotion(e) {
             const acc = e.accelerationIncludingGravity;
@@ -153,7 +165,7 @@
             let movement = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
             if (movement > threshold) {
                 shakeCount++;
-                if (shakeCount > 12) { // 成功搖晃次數
+                if (shakeCount > 12) {
                     window.removeEventListener('devicemotion', onMotion);
                     startCountdown();
                 }
@@ -181,8 +193,8 @@
 
     function renderResult() {
         const luckyPrize = currentPrizes[Math.floor(Math.random() * currentPrizes.length)];
+        const luckyGreeting = HORSE_GREETINGS[Math.floor(Math.random() * HORSE_GREETINGS.length)];
         
-        // 金色與紅色的彩帶特效
         confetti({
             particleCount: 200,
             spread: 80,
@@ -194,6 +206,7 @@
         document.getElementById('setup-view').style.display = 'none';
         document.getElementById('result-box').style.display = 'block';
         document.getElementById('prize-text').innerText = luckyPrize;
+        document.getElementById('greeting-text').innerText = luckyGreeting;
     }
 
     init();
